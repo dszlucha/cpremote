@@ -184,7 +184,7 @@ def rm(file: str):
     '''remove a file on the remote filesystem'''
     basic = HTTPBasicAuth('', cpremote_password)
     response = requests.request('DELETE', cpremote_host + '/fs/' + file, auth=basic)
-    if response.status_code == 200:
+    if response.status_code == 204:
         print('File existed and deleted')
     elif response.status_code == 401:
         print('Incorrect password')
@@ -203,8 +203,8 @@ def rmdir(directory: str):
         directory += '/'
     basic = HTTPBasicAuth('', cpremote_password)
     response = requests.request('DELETE', cpremote_host + '/fs/' + directory, auth=basic)
-    if response.status_code == 200:
-        print('File existed and deleted')
+    if response.status_code == 204:
+        print('Directory and its contents deleted')
     elif response.status_code == 401:
         print('Incorrect password')
     elif response.status_code == 403:
