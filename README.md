@@ -7,7 +7,7 @@ This command line tool implements the CircuitPython [web based workflow](https:/
 * CircuitPython boards that are remote
 * Workflows in which a CircuitPython project is kept external from the CircuitPython board such as on a host computer
 
-I use both `cpremote` and [`circup`](https://github.com/adafruit/circup) with all of my CircuitPython projects.
+I use `cpremote`, [`circup`](https://github.com/adafruit/circup) and [`CircuitPython for Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=joedevivo.vscode-circuitpython)with all of my CircuitPython projects.
 
 # install
 To install, download the last released version and install
