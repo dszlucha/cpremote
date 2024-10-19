@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cpremote"
+authors = [
+    {name = "David Szlucha", email = "dszlucha@duck.com"},
+]
+description = "cpremote is a command line tool for interacting with a CircuitPython remote filesystem access using the web based workflow"
+readme = "README.md"
+license = {text = "MIT License"}
+dynamic = ["version"]
+dependencies = [
+    "python-dotenv",
+    "requests",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "cpremote.__version__"}
+
+[project.scripts]
+cpremote = "cpremote.cpremote:main"
