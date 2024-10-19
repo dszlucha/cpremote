@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2024 David Szlucha
+# Copyright (c) 2024 dszlucha
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,14 +43,14 @@ def get(src: str, dst: str):
             with open(dst, 'w', encoding='utf-8') as file:
                 file.write(response.text)
             print('File exists and file returned')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('Missing file')
     else:
-        print(f'Unknown {response.status_code}: {response.text}')
+        message = {401: 'Incorrect password',
+                   403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+                   404: 'Missing file'}
+        try:
+            print(message[response.status_code])
+        except KeyError:
+            print(f'Unknown status_code: {response.status_code}')
 
 def info(path: str):
     '''show info about CircuitPython devices on the local network'''
@@ -95,14 +95,14 @@ def ls(directory: str):
             free = (free * block_size) / 1024
             total = (total * block_size) / 1024
         print(f'free: {free} {cpremote_units}, total: {total} {cpremote_units}, block size: {block_size}, writable: {data["writable"]}')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('Missing directory')
     else:
-        print(f'Unknown {response.status_code}: {response.text}')
+        message = {401: 'Incorrect password',
+                   403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+                   404: 'Missing directory'}
+        try:
+            print(message[response.status_code])
+        except KeyError:
+            print(f'Unknown status_code: {response.status_code}')
 
 def mkdir(directory: str):
     '''make a directory on the remote filesystem'''
@@ -110,71 +110,57 @@ def mkdir(directory: str):
         directory += '/'
     basic = HTTPBasicAuth('', cpremote_password)
     response = requests.request('PUT', cpremote_host + '/fs/' + directory, auth=basic)
-    if response.status_code == 201:
-        print('Directory created')
-    elif response.status_code == 204:
-        print('Directory or file exists')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('Missing parent directory')
-    elif response.status_code == 409:
-        print('USB is active and preventing file system modification')
-    elif response.status_code == 500:
-        print('Other, unhandled error')
-    else:
-        print(f'Unknown {response.status_code}: {response.text}')
+    message = {201: 'Directory created',
+               204: 'Directory or file exists',
+               401: 'Incorrect password',
+               403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+               404: 'Missing parent directory',
+               409: 'USB is active and preventing file system modification'}
+    try:
+        print(message[response.status_code])
+    except KeyError:
+        print(f'Unknown status_code: {response.status_code}')
 
 def mv(src: str, dst: str):
     '''move (rename) a file or directory on the remote filesystem'''
     basic = HTTPBasicAuth('', cpremote_password)
     headers = {'X-Destination': '/fs/' + dst}
     response = requests.request('MOVE', cpremote_host + '/fs/' + src, auth=basic, headers=headers)
-    if response.status_code == 201:
-        print('File/directory renamed')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('Source file/directory not found or destination path is missing')
-    elif response.status_code == 409:
-        print('USB is active and preventing file system modification')
-    elif response.status_code == 412:
-        print('Precondition Failed - The destination path is already in use')
-    else:
-        print(f'Unknown {response.status_code}: {response.text}')
+    message = {201: 'File/directory renamed',
+               401: 'Incorrect password',
+               403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+               404: 'Source file/directory not found or destination path is missing',
+               409: 'USB is active and preventing file system modification',
+               412: 'Precondition Failed - The destination path is already in use'}
+    try:
+        print(message[response.status_code])
+    except KeyError:
+        print(f'Unknown status_code: {response.status_code}')
 
 def put(src: str, dst: str):
     '''put a file on the remote filesystem'''
+    if not os.path.exists(src):
+        print(f'File {src} does not exist')
+        return
     if dst is None:
         dst = src
     basic = HTTPBasicAuth('', cpremote_password)
     with open(src, 'r', encoding='utf-8') as file:
         data = file.read()
     response = requests.request('PUT', cpremote_host + '/fs/' + dst, auth=basic, data=data)
-    if response.status_code == 201:
-        print('File created and saved')
-    elif response.status_code == 204:
-        print('File existed and overwritten')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('Missing parent directory')
-    elif response.status_code == 409:
-        print('USB is active and preventing file system modification')
-    elif response.status_code == 413:
-        print('Expect header not sent and file is too large')
-    elif response.status_code == 417:
-        print('Expect header sent and file is too large')
-    elif response.status_code == 500:
-        print('Other, unhandled error')
-    else:
-        print(f'Unknown {response.status_code}: {response.text}')
+    message = {201: 'File created and saved',
+               204: 'File existed and overwritten',
+               401: 'Incorrect password',
+               403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+               404: 'Missing parent directory',
+               409: 'USB is active and preventing file system modification',
+               413: 'Expect header not sent and file is too large',
+               417: 'Expect header sent and file is too large',
+               500: 'Other, unhandled error'}
+    try:
+        print(message[response.status_code])
+    except KeyError:
+        print(f'Unknown status_code: {response.status_code}')
 
 def repl():
     '''start Web REPL'''
@@ -184,18 +170,15 @@ def rm(file: str):
     '''remove a file on the remote filesystem'''
     basic = HTTPBasicAuth('', cpremote_password)
     response = requests.request('DELETE', cpremote_host + '/fs/' + file, auth=basic)
-    if response.status_code == 204:
-        print('File existed and deleted')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('File not found')
-    elif response.status_code == 409:
-        print('USB is active and preventing file system modification')
-    else:
-        print(f'Unknown {response.status_code}: {response.text}')
+    message = {204: 'File existed and deleted',
+               401: 'Incorrect password',
+               403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+               404: 'File not found',
+               409: 'USB is active and preventing file system modification'}
+    try:
+        print(message[response.status_code])
+    except KeyError:
+        print(f'Unknown status_code: {response.status_code}')
 
 def rmdir(directory: str):
     '''remove the directory and all of its contents on the remote filesystem'''
@@ -203,18 +186,15 @@ def rmdir(directory: str):
         directory += '/'
     basic = HTTPBasicAuth('', cpremote_password)
     response = requests.request('DELETE', cpremote_host + '/fs/' + directory, auth=basic)
-    if response.status_code == 204:
-        print('Directory and its contents deleted')
-    elif response.status_code == 401:
-        print('Incorrect password')
-    elif response.status_code == 403:
-        print('No CIRCUITPY_WEB_API_PASSWORD set')
-    elif response.status_code == 404:
-        print('No directory')
-    elif response.status_code == 409:
-        print('USB is active and preventing file system modification')
-    else:
-        print(f'Unknown {response.status_code}: {response.text}')
+    message = {204: 'Directory and its contents deleted',
+               401: 'Incorrect password',
+               403: 'No CIRCUITPY_WEB_API_PASSWORD set',
+               404: 'No directory',
+               409: 'USB is active and preventing file system modification'}
+    try:
+        print(message[response.status_code])
+    except KeyError:
+        print(f'Unknown status_code: {response.status_code}')
 
 def main():
     '''main entry point'''
@@ -238,9 +218,7 @@ def main():
                              'Overrides CPREMOTE_PASSWORD environment variable')
     parser.add_argument('--units', choices=['b', 'kb', 'blocks'],
                         help='file size units. Overrides CPREMOTE_UNIT environment variable')
-    
-    parser.add_argument('-V', '--version', action='version',
-                    version=f'%(prog)s {__version__}')
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
 
     subparsers = parser.add_subparsers(dest='command', help='command help')
 

@@ -10,9 +10,8 @@ This command line tool implements the CircuitPython [web based workflow](https:/
 I use `cpremote`, [`circup`](https://github.com/adafruit/circup) and [`CircuitPython for Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=joedevivo.vscode-circuitpython)with all of my CircuitPython projects.
 
 # install
-To install, download the last released version and install
 ```sh
-pip install cpremote-<version>.tar.gz
+pip install cpremote
 ```
 
 # environment variables
@@ -53,7 +52,7 @@ The `repl` command will launch a basic web repl using the default system browser
 Full help. Also, note that help for individual command line options is available using `-h` or `--help` before a command
 ```
 cpremote --help
-usage: cpremote [-h] [--host HOST] [--password PASSWORD] [--units {b,kb,blocks}] [-V] {devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version} ...
+usage: cpremote [-h] [--host HOST] [--password PASSWORD] [--units {b,kb,blocks}] [-v] {devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version} ...
 
 CircuitPython remote filesystem access for web based workflow
 
@@ -78,7 +77,7 @@ optional arguments:
   --password PASSWORD   CircuitPython password.Overrides CPREMOTE_PASSWORD environment variable
   --units {b,kb,blocks}
                         file size units. Overrides CPREMOTE_UNIT environment variable
-  -V, --version         show program's version number and exit
+  -v, --version         show program's version number and exit
 ```
 
 # IP addresses vs mDNS local host names
