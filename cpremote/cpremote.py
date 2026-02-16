@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2024 dszlucha
+# Copyright (c) 2026 dszlucha
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,16 @@ from requests.auth import HTTPBasicAuth
 
 from . import __version__
 
+def circup(circup_command: str):
+    '''passes a command to circup with --host and --password set'''
+    if len(circup_command) == 0:
+        os.system('circup --help')
+    else:
+        command = ''
+        for argument in circup_command:
+            command += f'{argument} '
+        os.system(f'circup --host {cpremote_host.removeprefix("http://")} --password {cpremote_password} {command}')
+
 def get(src: str, dst: str):
     '''get a file from remote filesystem'''
     basic = HTTPBasicAuth('', cpremote_password)
@@ -47,9 +57,9 @@ def get(src: str, dst: str):
         message = {401: 'Incorrect password',
                    403: 'No CIRCUITPY_WEB_API_PASSWORD set',
                    404: 'Missing file'}
-        try:
+        if response.status_code in message:
             print(message[response.status_code])
-        except KeyError:
+        else:
             print(f'Unknown status_code: {response.status_code}')
 
 def info(path: str):
@@ -99,9 +109,9 @@ def ls(directory: str):
         message = {401: 'Incorrect password',
                    403: 'No CIRCUITPY_WEB_API_PASSWORD set',
                    404: 'Missing directory'}
-        try:
+        if response.status_code in message:
             print(message[response.status_code])
-        except KeyError:
+        else:
             print(f'Unknown status_code: {response.status_code}')
 
 def mkdir(directory: str):
@@ -116,9 +126,9 @@ def mkdir(directory: str):
                403: 'No CIRCUITPY_WEB_API_PASSWORD set',
                404: 'Missing parent directory',
                409: 'USB is active and preventing file system modification'}
-    try:
+    if response.status_code in message:
         print(message[response.status_code])
-    except KeyError:
+    else:
         print(f'Unknown status_code: {response.status_code}')
 
 def mv(src: str, dst: str):
@@ -132,9 +142,9 @@ def mv(src: str, dst: str):
                404: 'Source file/directory not found or destination path is missing',
                409: 'USB is active and preventing file system modification',
                412: 'Precondition Failed - The destination path is already in use'}
-    try:
+    if response.status_code in message:
         print(message[response.status_code])
-    except KeyError:
+    else:
         print(f'Unknown status_code: {response.status_code}')
 
 def put(src: str, dst: str):
@@ -157,9 +167,9 @@ def put(src: str, dst: str):
                413: 'Expect header not sent and file is too large',
                417: 'Expect header sent and file is too large',
                500: 'Other, unhandled error'}
-    try:
+    if response.status_code in message:
         print(message[response.status_code])
-    except KeyError:
+    else:
         print(f'Unknown status_code: {response.status_code}')
 
 def repl():
@@ -175,9 +185,9 @@ def rm(file: str):
                403: 'No CIRCUITPY_WEB_API_PASSWORD set',
                404: 'File not found',
                409: 'USB is active and preventing file system modification'}
-    try:
+    if response.status_code in message:
         print(message[response.status_code])
-    except KeyError:
+    else:
         print(f'Unknown status_code: {response.status_code}')
 
 def rmdir(directory: str):
@@ -191,24 +201,13 @@ def rmdir(directory: str):
                403: 'No CIRCUITPY_WEB_API_PASSWORD set',
                404: 'No directory',
                409: 'USB is active and preventing file system modification'}
-    try:
+    if response.status_code in message:
         print(message[response.status_code])
-    except KeyError:
+    else:
         print(f'Unknown status_code: {response.status_code}')
 
-def main():
-    '''main entry point'''
-    global cpremote_host
-    global cpremote_password
-    global cpremote_units
-
-    config = dotenv.find_dotenv(usecwd=True)
-    if config:
-        dotenv.load_dotenv(config)
-    cpremote_host = os.getenv('CPREMOTE_HOST')
-    cpremote_password = os.getenv('CPREMOTE_PASSWORD')
-    cpremote_units = os.getenv('CPREMOTE_UNITS')
-
+def get_parser():
+    '''parse command line args'''
     parser = argparse.ArgumentParser(
         description='CircuitPython remote filesystem access for web based workflow')
     parser.add_argument(
@@ -216,11 +215,14 @@ def main():
     parser.add_argument('--password',
                         help='CircuitPython password.'
                              'Overrides CPREMOTE_PASSWORD environment variable')
-    parser.add_argument('--units', choices=['b', 'kb', 'blocks'],
+    parser.add_argument('--units', choices=['b', 'kb', 'blks'],
                         help='file size units. Overrides CPREMOTE_UNIT environment variable')
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
 
     subparsers = parser.add_subparsers(dest='command', help='command help')
+
+    parser_circup = subparsers.add_parser('circup', help='pass a command to circup with --host and --password set from CPREMOTE_HOST and CPREMOTE_PASSWORD')
+    parser_circup.add_argument('circup_command', nargs='*', help='command to pass to circup')
 
     subparsers.add_parser('devices',
                           help='show info about CircuitPython devices on the local network')
@@ -255,7 +257,22 @@ def main():
     parser_rmdir.add_argument('directory', help='directory to remove from the remote filesystem')
 
     subparsers.add_parser('version', help='returns information about the device')
+    return parser
 
+def main():
+    '''main entry point'''
+    global cpremote_host
+    global cpremote_password
+    global cpremote_units
+
+    config = dotenv.find_dotenv(usecwd=True)
+    if config:
+        dotenv.load_dotenv(config)
+    cpremote_host = os.getenv('CPREMOTE_HOST')
+    cpremote_password = os.getenv('CPREMOTE_PASSWORD')
+    cpremote_units = os.getenv('CPREMOTE_UNITS')
+
+    parser = get_parser()
     args = parser.parse_args()
     if not args.host is None:
         cpremote_host = args.host
@@ -272,28 +289,20 @@ def main():
         print('Error: CPREMOTE_PASSWORD is not set')
         return
 
-    if args.command == 'devices':
-        info('devices')
-    elif args.command == 'diskinfo':
-        info('diskinfo')
-    elif args.command == 'get':
-        get(args.src, args.dst)
-    elif args.command == 'ls':
-        ls(args.directory)
-    elif args.command == 'mkdir':
-        mkdir(args.directory)
-    elif args.command == 'mv':
-        mv(args.src, args.dst)
-    elif args.command == 'put':
-        put(args.src, args.dst)
+    if 'src' in args and 'dst' in args:
+        dispatch = {'get': get, 'mv': mv, 'put': put}
+        dispatch[args.command](args.src, args.dst)
+    elif 'directory' in args:
+        dispatch = {'ls': ls, 'mkdir': mkdir, 'rmdir': rmdir}
+        dispatch[args.command](args.directory)
+    elif 'file' in args:
+        rm(args.file)
+    elif args.command in ('devices', 'diskinfo', 'version'):
+        info(args.command)
     elif args.command == 'repl':
         repl()
-    elif args.command == 'rm':
-        rm(args.file)
-    elif args.command == 'rmdir':
-        rmdir(args.directory)
-    elif args.command == 'version':
-        info('version')
+    elif args.command == 'circup':
+        circup(args.circup_command)
     else:
         parser.print_help()
 

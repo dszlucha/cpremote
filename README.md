@@ -21,7 +21,7 @@ cpremote will look for a `.env` file in the current directory which can contain 
 CPREMOTE_HOST=http://192.168.1.90
 # remote password
 CPREMOTE_PASSWORD=mypassword
-# file size units for 'ls' command: 'b' - bytes, 'kb' - kilobytes or 'blocks'
+# file size units for 'ls' command: 'b' - bytes, 'kb' - kilobytes or 'blks' - blocks
 CPREMOTE_UNITS=kb
 ```
 
@@ -48,17 +48,27 @@ cpremote --host http://1.2.3.4 --password mypassword put code.py
 ## repl
 The `repl` command will launch a basic web repl using the default system browser
 
+## circup
+This is a convenience command which will pass `--host` and `--password` from the CPREMOTE_HOST and CPREMOTE_PASSWORD environment variables to `circup` if it is installed. For example,
+```
+cpremote circup list
+```
+will pass --host and --password to the circup command and will get a list of installed packages.
+
+If no argument is present, circup will be envoked with the --help argument. Also, note that passing some options to circup such as --verbose will need to be quoted and passed first. For example, to get a list of of installed libraries with verbose enabled, use the command line `cpremote circup "--verbose list"`.
+
 ## help
 Full help. Also, note that help for individual command line options is available using `-h` or `--help` before a command
 ```
 cpremote --help
-usage: cpremote [-h] [--host HOST] [--password PASSWORD] [--units {b,kb,blocks}] [-v] {devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version} ...
+usage: cpremote [-h] [--host HOST] [--password PASSWORD] [--units {b,kb,blks}] [-v] {circup,devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version} ...
 
 CircuitPython remote filesystem access for web based workflow
 
 positional arguments:
-  {devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version}
+  {circup,devices,diskinfo,get,ls,mkdir,mv,put,repl,rm,rmdir,version}
                         command help
+    circup              pass a command to circup with --host and --password set from CPREMOTE_HOST and CPREMOTE_PASSWORD
     devices             show info about CircuitPython devices on the local network
     diskinfo            show disk info about the remote filesystem
     get                 get a file from remote filesystem
@@ -75,13 +85,12 @@ optional arguments:
   -h, --help            show this help message and exit
   --host HOST           CircuitPython host name. Overrides CPREMOTE_HOST environment variable
   --password PASSWORD   CircuitPython password.Overrides CPREMOTE_PASSWORD environment variable
-  --units {b,kb,blocks}
-                        file size units. Overrides CPREMOTE_UNIT environment variable
+  --units {b,kb,blks}   file size units. Overrides CPREMOTE_UNIT environment variable
   -v, --version         show program's version number and exit
 ```
 
-# IP addresses vs mDNS local host names
+# IP addresses vs. mDNS local host names
 In my experience, using IP addresses seems to be more performant than mDNS local host names when accessing a CircuitPython board. However, this may be an issue in my local network so your experience may be different
 
 # Attribution
-CircuitPython is created by Adafruit Industries.
+CircuitPython and circup are created by Adafruit Industries.
