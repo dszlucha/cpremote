@@ -50,8 +50,8 @@ def get(src: str, dst: str):
         if dst is None:
             print(response.text)
         else:
-            with open(dst, 'w', encoding='utf-8') as file:
-                file.write(response.text)
+            with open(dst, 'wb') as file:
+                file.write(response.content)
             print('File exists and file returned')
     else:
         message = {401: 'Incorrect password',
@@ -155,7 +155,7 @@ def put(src: str, dst: str):
     if dst is None:
         dst = src
     basic = HTTPBasicAuth('', cpremote_password)
-    with open(src, 'r', encoding='utf-8') as file:
+    with open(src, 'rb') as file:
         data = file.read()
     response = requests.request('PUT', cpremote_host + '/fs/' + dst, auth=basic, data=data)
     message = {201: 'File created and saved',
